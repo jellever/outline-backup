@@ -20,7 +20,9 @@ class Config(Structure):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("config", help="read config file (or write new one if missing)")
+    parser.add_argument("-k", "--ignore_ssl", action="store_true", help="Ignore SSL certificate")
     args = parser.parse_args()
+    verify_ssl = args.ignore_ssl == False
 
     configfile = Path(args.config).resolve()
     config = Config(configfile)
@@ -33,7 +35,7 @@ def main():
         'content-type': 'application/json',
         'accept': 'application/json',
     }
-    response = requests.post(export_url, headers=headers)
+    response = requests.post(export_url, headers=headers, verify=verify_ssl)
 
     response.raise_for_status()
 
@@ -48,7 +50,7 @@ def main():
     details = {}
     file_url = urljoin(config.server, "/api/fileOperations.info")
     for _retry in range(600):
-        details = requests.post(file_url, headers=headers, json={'id': file_id}).json()
+        details = requests.post(file_url, headers=headers, json={'id': file_id}, verify=verify_ssl).json()
         if details.get('data', {})['state'] == "complete":
             break
         time.sleep(1)
@@ -64,7 +66,7 @@ def main():
     backup_name = f'{time.strftime("%Y%m%d-%H%M%S")}_backup'
     filename = Path('.') / f'{backup_name}.zip'
 
-    with requests.post(retreive_url, headers=headers, json={'id': file_id}, stream=True) as r:
+    with requests.post(retreive_url, headers=headers, json={'id': file_id}, stream=True, verify=verify_ssl) as r:
         # if r.headers
         with open(filename, 'wb') as f:
             shutil.copyfileobj(r.raw, f)
