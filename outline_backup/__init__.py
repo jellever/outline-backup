@@ -93,6 +93,10 @@ def main():
     subprocess.run(['git', 'add', '.'], cwd=str(gitdir), env=ssh_env)
     subprocess.run(['git', 'commit', '-m', backup_name], cwd=str(gitdir), env=ssh_env)
     subprocess.run(['git', 'push'], cwd=str(gitdir), env=ssh_env)
+
+    print("Removing zip file again")
+    os.remove(filename)
+
     print("Finished")
 
 
